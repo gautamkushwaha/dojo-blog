@@ -1,0 +1,581 @@
+ // const handleClickAgain = (name, e ) =>{
+    //     console.log("hello" + name, e.target)
+    // }
+
+
+     {/* <button onClick ={(e) =>{
+                handleClickAgain(" Elon Bhaiya",e)
+            }}>Click me Again</button> */}
+
+
+
+
+             const[name, setName] = useState("Gaut");
+   const[age, setAge]  = useState(20)
+
+
+<p>{name} is {age} years old</p>
+            <button onClick = {handleClick}>Click me</button>
+
+   const Bloglist = (props) => {
+    const blogs = props.blogs;
+    const title = props.title;
+   }
+
+
+
+   <Bloglist blogs={blogs.filter((blog)=> blog.author==='gautam')} title="gautam blogs!"/>
+
+
+
+   ------------------------------------------------------------------------
+   16. all the endpoints we are using are listed below:
+
+
+   blogs                get           fetch all the blogs
+   /blogs/{id}          get           fetch a single blog
+   /blogs               post          Add a new blog
+   /blog/{id}           delete        delete a blog
+
+
+
+
+   ------------------------------------------------------------------------
+     useEffect(()=>{
+      fetch(' http://localhost:8000/blogs')
+      .then(res => {
+         return res.json()
+      })
+      .then(data => {
+         setBlogs(data);
+      })
+       }, []);
+ ------------------------------------------------------------------------
+ useEffect(()=>{
+ fetch('url')
+ .then(res =>{
+   return res.json()
+ })
+ .then(data => {
+   setBlogs(data);
+ })
+ },[])
+------------------------------------------------------------------------
+ useEffect(()=>{
+      setTimeout(() => {
+         fetch(' http://localhost:8000/blogs')
+      .then(res => {
+         return res.json()
+      })
+      .then(data => {
+         setBlogs(data);
+         setIsPending(false);
+      });
+      }, 1000);
+   }, []);
+   ------------------------------------------------------------------------
+#19 - Handling Fetch Errors
+
+
+
+
+const Home = () => {
+   const[blogs, setBlogs] = useState(null);
+   const[isPending, setIsPending] = useState(true);
+   const[error, setError] =useState(null);
+
+   const handleDelete = (id) =>{
+    const newBlogs = blogs.filter(blog => blog.id !==id);
+    setBlogs(newBlogs);
+   }
+   useEffect(()=>{
+      setTimeout(() => {
+         fetch(' http://localhost:8000/blogs')
+           .then(res => {
+            console.log(res);
+            if(!res.ok){
+               throw Error('Could not  fetch the data for that resource');
+            }
+              return res.json();
+            })
+           .then(data => {
+             setBlogs(data);
+             setIsPending(false);
+             setError(null);
+            })
+      .catch(err =>{
+         setIsPending(false);
+         setError(err.message);
+      })
+      }, 1000);
+   }, []);
+    return ( 
+        <div className="home">
+         {error && <div>{error}</div>}
+         {isPending && <div>Loading.....</div>}
+       {blogs && <Bloglist blogs={blogs} title="All blogs!" handleDelete={handleDelete}/>}
+      
+        </div>
+     );
+}
+
+
+  ------------------------------------------------------------------------
+      npx jason-server --watch data/db.json --port 8000
+
+  ------------------------------------------------------------------------
+  #20 - Making a Custom Hook
+------------------------------------------
+home.js
+
+import { useState ,useEffect} from 'react';
+import Bloglist from './Bloglist';
+import useFetch from './useFetch';
+
+const Home = () => {
+ const{data: blogs, isPending, error} = useFetch('http://localhost:8000/blogs');
+  
+    return ( 
+        <div className="home">
+         {error && <div>{error}</div>}
+         {isPending && <div>Loading.....</div>}
+       {blogs && <Bloglist blogs={blogs} title="All blogs!"/>}
+      
+        </div>
+     );
+}
+ 
+export default Home;
+
+------------------------------------------
+useFetch.js
+
+
+import { useState ,useEffect} from 'react';
+
+ const useFetch = (url) => {
+    const[data, setData] = useState(null);
+    const[isPending, setIsPending] = useState(true);
+    const[error, setError] = useState(null);
+
+    useEffect(()=>{
+        setTimeout(() => {
+           fetch(url)
+             .then(res => {
+              console.log(res);
+              if(!res.ok){
+                 throw Error('Could not  fetch the data for that resource');
+              }
+                return res.json();
+              })
+             .then(data => {
+               setData(data);
+               setIsPending(false);
+               setError(null);
+              })
+        .catch(err =>{
+           setIsPending(false);
+           setError(err.message);
+        })
+        }, 1000);
+     }, [url]);
+     return {data, isPending, error}
+}
+
+export default useFetch;
+------------------------------------------
+ #21 - The React Router
+App.js 
+import Navbar from './Navbar';
+import Home from './Home';
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+function App() {
+  return (
+    <Router>
+       <div className="App">
+         <Navbar/>
+       <div className="content">
+           <Switch>
+             <Route path ="/">
+                <Home/>
+            </Route>
+           </Switch>
+          </div> 
+       </div>
+   </Router>
+  
+  );
+}
+
+export default App;
+
+------------------------------------------
+#22 - Exact Match Routes
+Create.js
+const Create = () => {
+    return ( 
+        <div className="create">
+            <h2>Add New blog</h2>
+        </div>
+     );
+}
+ 
+export default Create;
+-----------------------
+App.js
+import Navbar from './Navbar';
+import Home from './Home';
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+import Create from './Create';
+function App() {
+  return (
+    <Router>
+       <div className="App">
+         <Navbar/>
+       <div className="content">
+           <Switch>
+             <Route  exact path ="/">
+                <Home/>
+            </Route>
+            <Route path ="/create">
+               <Create/>
+            </Route>
+           </Switch>
+          </div> 
+       </div>
+   </Router>
+  
+  );
+}
+
+export default App;
+------------------------------------------
+#23 - Router Links
+Navbar.js 
+import {Link} from 'react-router-dom';
+ <Link to = "/" >Home</Link>
+
+import {link} from 'react-router-dom';
+
+const Navbar = () => {
+    return (
+        <nav className="navbar">
+            <h1>The Dojo blog</h1>
+            <div className="links">
+                <link to = "/" >Home</link>
+                <link to = "/create" style={{
+                    color:"white",
+                    backgroundColor: "#f1356d",
+                    borderRadius : '8px'
+                }}>Blog Page</link>
+                
+            </div>
+        </nav>
+      );
+}
+ 
+export default Navbar;
+------------------------------------------
+#24 - useEffect Cleanup
+
+useFetch.js
+const abortCont = new AbortController();
+if(err.name === 'AbortError'){
+                console.log("fetch aborted")
+            }else{
+           setIsPending(false);
+           setError(err.message);
+           }
+
+ return () => abortCont.abort();
+
+
+import { useState ,useEffect} from 'react';
+
+ const useFetch = (url) => {
+    const[data, setData] = useState(null);
+    const[isPending, setIsPending] = useState(true);
+    const[error, setError] = useState(null);
+
+    useEffect(()=>{
+        const abortCont = new AbortController();
+        setTimeout(() => {
+           fetch(url, {signal: abortCont.signal})
+             .then(res => {
+              console.log(res);
+              if(!res.ok){
+                 throw Error('Could not  fetch the data for that resource');
+              }
+                return res.json();
+              })
+             .then(data => {
+               setData(data);
+               setIsPending(false);
+               setError(null);
+              })
+        .catch(err =>{
+            if(err.name === 'AbortError'){
+                console.log("fetch aborted")
+            }else{
+           setIsPending(false);
+           setError(err.message);
+           }
+        })
+        }, 1000);
+        return () => abortCont.abort();
+     }, [url]);
+     return {data, isPending, error}
+}
+
+export default useFetch;
+------------------------------------------
+#25 - Route Parameters
+sometimes we have to pass dynamic value as a 
+blogs/123
+blogs/456
+blogs/789
+---------------
+BlogDetails.js
+
+import { useParams } from "react-router-dom";
+const BlogDetails = () => {
+   const{ id } = useParams();
+    return ( 
+        <div className="blog-details">
+            <h2>Blog Details-{id}</h2>
+        </div>
+     );
+}
+ 
+export default BlogDetails;
+---------------
+App.js
+<Route path ="/blogs/:id">
+ <BlogDetails/>
+</Route>
+
+
+import Navbar from './Navbar';
+import Home from './Home';
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+import Create from './Create';
+import BlogDetails from './BlogDetails';
+function App() {
+  return (
+    <Router>
+       <div className="App">
+         <Navbar/>
+       <div className="content">
+           <Switch>
+             <Route  exact path ="/">
+                <Home/>
+            </Route>
+            <Route path ="/create">
+               <Create/>
+            </Route>
+            <Route path ="/blogs/:id">
+             <BlogDetails/>
+            </Route>
+           </Switch>
+          </div> 
+       </div>
+   </Router>
+  
+  );
+}
+
+export default App;
+---------------
+index.css
+.blog-preview a{
+  text-decoration: none;
+}
+
+------------------------------------------------------------
+#26 - Reusing Custom Hooks
+BlogDetails.js
+
+import useFetch from "./useFetch";
+
+  const {data: blog, error, isPending} = useFetch('http://localhost:8000/blogs/' + id)
+
+  {isPending && <div>Loading....</div>}
+            { error && <div>{error}</div>}
+            {blog && (
+                <article>
+                    <h2>{blog.title}</h2>
+                    <p>Written by {blog.author}</p>
+                    <div>{blog.body}</div>
+                </article>
+            )}
+
+
+import { useParams } from "react-router-dom";
+import useFetch from "./useFetch";
+const BlogDetails = () => {
+   const{ id } = useParams();
+   const {data: blog, error, isPending} = useFetch('http://localhost:8000/blogs/' + id)
+    return ( 
+        <div className="blog-details">
+            {isPending && <div>Loading....</div>}
+            { error && <div>{error}</div>}
+            {blog && (
+                <article>
+                    <h2>{blog.title}</h2>
+                    <p>Written by {blog.author}</p>
+                    <div>{blog.body}</div>
+                </article>
+            )}
+        </div>
+     );
+}
+ 
+export default BlogDetails;
+
+------------------------------------------------------------
+#27 - Controlled Inputs (forms)
+  const [body, setBody] = useState('');
+ const [author, setAuthor] = useState('mario');
+ <form>
+        <label>Blog title:</label>
+        <input type="text" required  value={title} onChange = {(e) => setTitle(e.target.value)}/>
+        <label>Blog body:</label>
+        <textarea required value ={body} onChange ={(e) => setBody(e.target.value)} > </textarea>
+        <label>Blog author:</label>
+        <select value ={author} onChange ={(e) => setAuthor(e.target.value)}>
+          <option value="mario">mario</option>
+          <option value="Yoshi">Yoshi</option>
+        </select>
+        <button>Add blog:</button>
+        <p>{title}</p>
+        <p>{body}</p>
+        <p>{author}</p>
+      </form>
+
+import { useState } from "react";
+
+const Create = () => {
+     const [title, setTitle] = useState('');
+     const [body, setBody] = useState('');
+     const [author, setAuthor] = useState('mario');
+  return (
+    <div className="create">
+      <h2>Add New blog</h2>
+      <form>
+        <label>Blog title:</label>
+        <input type="text" required  value={title} onChange = {(e) => setTitle(e.target.value)}/>
+        <label>Blog body:</label>
+        <textarea required value ={body} onChange ={(e) => setBody(e.target.value)} > </textarea>
+        <label>Blog author:</label>
+        <select value ={author} onChange ={(e) => setAuthor(e.target.value)}>
+          <option value="mario">mario</option>
+          <option value="Yoshi">Yoshi</option>
+        </select>
+        <button>Add blog:</button>
+        <p>{title}</p>
+        <p>{body}</p>
+        <p>{author}</p>
+      </form>
+    </div>
+  );
+};
+
+export default Create;
+------------------------------------------------------------
+
+ #28 - Submit Events
+
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(title, body, author);
+  };
+
+   <form onSubmit={handleSubmit}>
+
+------------------------------------------------------------
+#29 - Making a POST Request
+const [isPending, setIsPending] = useState('')
+
+
+fetch('http://localhost:8000/blogs',{
+      method: 'POST',
+      headers:{"content-type": "application/json"},
+      body:JSON.stringify(blog)
+    }).then(()=>{
+      console.log('new blog');
+      setIsPending(false);
+    })
+  };
+
+ setIsPending(true);
+
+ setIsPending(false);
+
+
+  {!isPending && <button>Add blog:</button>}
+  {isPending && <button disabled>Adding blog...:</button>}
+
+  -------------------------------
+import { useState } from "react";
+
+const Create = () => {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [author, setAuthor] = useState("mario");
+  const [isPending, setIsPending] = useState(false)
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const blog ={title, body, author};
+
+    setIsPending(true);
+
+    fetch('http://localhost:8000/blogs',{
+      method: 'POST',
+      headers:{"content-type": "application/json"},
+      body:JSON.stringify(blog)
+    }).then(()=>{
+      console.log('new blog');
+      setIsPending(false);
+    })
+  };
+
+  return (
+    <div className="create">
+      <h2>Add New blog</h2>
+      <form onSubmit={handleSubmit}>
+        <label>Blog title:</label>
+        <input
+          type="text"
+          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <label>Blog body:</label>
+        <textarea
+          required
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        >
+          {" "}
+        </textarea>
+        <label>Blog author:</label>
+        <select value={author} onChange={(e) => setAuthor(e.target.value)}>
+          <option value="mario">mario</option>
+          <option value="Yoshi">Yoshi</option>
+        </select>
+        {!isPending && <button>Add blog:</button>}
+        {isPending && <button disabled>Adding blog...:</button>}
+      </form>
+    </div>
+  );
+};
+
+export default Create;
+
+------------------------------------------------------------
+
+ #30 - Programmatic Redirects
+
+ ----------------------------------
